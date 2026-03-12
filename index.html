@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sourdough Assistant</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <header>
+      <h1>🍞 Sourdough Assistant</h1>
+      <p class="tagline">Your AI-powered baking companion</p>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab active" data-tab="chat">Ask Me Anything</button>
+      <button class="tab" data-tab="recipes">Recipe Journal</button>
+    </nav>
+
+    <main>
+      <!-- Chat Tab -->
+      <section id="chat" class="tab-content active">
+        <div class="chat-container">
+          <div class="messages" id="messages">
+            <div class="message assistant">
+              <div class="message-content">
+                <p>Hey! I'm your sourdough assistant. Ask me anything about your starter, troubleshooting, recipes, or baking tips. What's on your mind?</p>
+              </div>
+            </div>
+          </div>
+          <form id="chat-form" class="chat-input">
+            <input type="text" id="user-input" placeholder="Ask about your sourdough..." autocomplete="off">
+            <button type="submit">Send</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Recipes Tab -->
+      <section id="recipes" class="tab-content">
+        <div class="recipes-header">
+          <h2>Your Recipe Journal</h2>
+          <button id="add-recipe-btn" class="btn-primary">+ Add Recipe</button>
+        </div>
+        
+        <div class="recipes-list" id="recipes-list">
+          <!-- Recipes will be populated here -->
+        </div>
+
+        <!-- Add/Edit Recipe Modal -->
+        <div id="recipe-modal" class="modal hidden">
+          <div class="modal-content">
+            <h3 id="modal-title">Add New Recipe</h3>
+            <form id="recipe-form">
+              <input type="hidden" id="recipe-id">
+              <div class="form-group">
+                <label for="recipe-name">Recipe Name</label>
+                <input type="text" id="recipe-name" required>
+              </div>
+              <div class="form-group">
+                <label for="recipe-ingredients">Ingredients</label>
+                <textarea id="recipe-ingredients" rows="4" placeholder="e.g., 500g bread flour, 350g water, 100g starter..."></textarea>
+              </div>
+              <div class="form-group">
+                <label for="recipe-instructions">Instructions</label>
+                <textarea id="recipe-instructions" rows="6" placeholder="Your process..."></textarea>
+              </div>
+              <div class="form-group">
+                <label for="recipe-notes">Notes (what worked, what to try next)</label>
+                <textarea id="recipe-notes" rows="3" placeholder="This batch was great because..."></textarea>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="recipe-rating">Rating</label>
+                  <select id="recipe-rating">
+                    <option value="">Not rated</option>
+                    <option value="5">⭐⭐⭐⭐⭐ Perfect</option>
+                    <option value="4">⭐⭐⭐⭐ Great</option>
+                    <option value="3">⭐⭐⭐ Good</option>
+                    <option value="2">⭐⭐ Okay</option>
+                    <option value="1">⭐ Needs work</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="recipe-date">Date Baked</label>
+                  <input type="date" id="recipe-date">
+                </div>
+              </div>
+              <div class="modal-actions">
+                <button type="button" id="cancel-recipe" class="btn-secondary">Cancel</button>
+                <button type="submit" class="btn-primary">Save Recipe</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Powered by your love of bread 🥖</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
