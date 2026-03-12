@@ -1,9 +1,10 @@
 // Sourdough Assistant App
 
 // ============ Configuration ============
-// To use with Gemini API, add your API key here
-const GEMINI_API_KEY = ''; // Add your API key
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+
+// Load API key from localStorage
+let geminiApiKey = localStorage.getItem('sourdough-api-key') || '';
 
 const SYSTEM_PROMPT = `You are a friendly and knowledgeable sourdough baking assistant. You help home bakers with:
 - Starter maintenance (feeding schedules, troubleshooting, reviving)
@@ -33,6 +34,14 @@ const recipeModal = document.getElementById('recipe-modal');
 const recipeForm = document.getElementById('recipe-form');
 const cancelRecipeBtn = document.getElementById('cancel-recipe');
 const modalTitle = document.getElementById('modal-title');
+
+// Settings elements
+const apiKeyInput = document.getElementById('api-key-input');
+const apiKeyStatus = document.getElementById('api-key-status');
+const saveApiKeyBtn = document.getElementById('save-api-key');
+const clearApiKeyBtn = document.getElementById('clear-api-key');
+const toggleKeyVisibilityBtn = document.getElementById('toggle-key-visibility');
+const exportRecipesBtn = document.getElementById('export-recipes');
 
 // ============ Tab Navigation ============
 tabs.forEach(tab => {
@@ -67,7 +76,7 @@ chatForm.addEventListener('submit', async (e) => {
     addMessage(response, 'assistant');
   } catch (error) {
     loadingMsg.remove();
-    addMessage('Sorry, I had trouble responding. ' + (GEMINI_API_KEY ? 'Please try again.' : 'Add your Gemini API key to app.js to enable AI responses.'), 'assistant');
+    addMessage('Sorry, I had trouble responding. ' + (geminiApiKey ? 'Please try again.' : 'Add your Gemini API key in Settings to enable AI responses.'), 'assistant');
     console.error('Chat error:', error);
   }
 });
@@ -101,12 +110,12 @@ async function getAIResponse(userMessage) {
   // Add to chat history
   chatHistory.push({ role: 'user', parts: [{ text: userMessage }] });
   
-  if (!GEMINI_API_KEY) {
+  if (!geminiApiKey) {
     // Fallback responses when no API key
     return getFallbackResponse(userMessage);
   }
   
-  const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+  const response = await fetch(`${GEMINI_API_URL}?key=${geminiApiKey}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -157,8 +166,90 @@ function getFallbackResponse(message) {
     return "Hydration = (water weight / flour weight) × 100\n\n- 65-70%: Good for beginners, easier to handle\n- 70-75%: Nice open crumb, moderate difficulty\n- 75-80%: Very open crumb, sticky dough\n- 80%+: Advanced, very wet and tricky\n\nStart lower and work your way up as you get comfortable!";
   }
   
-  return "I'd love to help with that! To give you the best advice, could you tell me more about:\n- What specific issue you're facing?\n- How old is your starter?\n- What's your typical process?\n\n(Tip: Add your Gemini API key to app.js for full AI-powered responses!)";
+  return "I'd love to help with that! To give you the best advice, could you tell me more about:\n- What specific issue you're facing?\n- How old is your starter?\n- What's your typical process?\n\n(Tip: Add your Gemini API key in Settings for full AI-powered responses!)";
 }
+
+// ============ Settings Functionality ============
+function initSettings() {
+  // Load existing API key into input (masked)
+  if (geminiApiKey) {
+    apiKeyInput.value = geminiApiKey;
+    showApiKeyStatus('API key is configured', 'success');
+  }
+}
+
+function showApiKeyStatus(message, type) {
+  apiKeyStatus.textContent = message;
+  apiKeyStatus.className = `api-key-status ${type}`;
+}
+
+saveApiKeyBtn.addEventListener('click', async () => {
+  const key = apiKeyInput.value.trim();
+  
+  if (!key) {
+    showApiKeyStatus('Please enter an API key', 'error');
+    return;
+  }
+  
+  // Test the API key
+  showApiKeyStatus('Testing API key...', 'info');
+  
+  try {
+    const response = await fetch(`${GEMINI_API_URL}?key=${key}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
+        generationConfig: { maxOutputTokens: 10 }
+      })
+    });
+    
+    if (response.ok) {
+      geminiApiKey = key;
+      localStorage.setItem('sourdough-api-key', key);
+      showApiKeyStatus('API key saved and verified!', 'success');
+    } else {
+      const error = await response.json();
+      showApiKeyStatus(`Invalid API key: ${error.error?.message || 'Unknown error'}`, 'error');
+    }
+  } catch (error) {
+    showApiKeyStatus('Could not verify API key. Saving anyway...', 'info');
+    geminiApiKey = key;
+    localStorage.setItem('sourdough-api-key', key);
+    setTimeout(() => showApiKeyStatus('API key saved', 'success'), 1500);
+  }
+});
+
+clearApiKeyBtn.addEventListener('click', () => {
+  geminiApiKey = '';
+  localStorage.removeItem('sourdough-api-key');
+  apiKeyInput.value = '';
+  showApiKeyStatus('API key cleared', 'info');
+  setTimeout(() => {
+    apiKeyStatus.className = 'api-key-status';
+  }, 2000);
+});
+
+toggleKeyVisibilityBtn.addEventListener('click', () => {
+  if (apiKeyInput.type === 'password') {
+    apiKeyInput.type = 'text';
+    toggleKeyVisibilityBtn.textContent = '🙈';
+  } else {
+    apiKeyInput.type = 'password';
+    toggleKeyVisibilityBtn.textContent = '👁️';
+  }
+});
+
+exportRecipesBtn.addEventListener('click', () => {
+  const dataStr = JSON.stringify(recipes, null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'sourdough-recipes.json';
+  a.click();
+  URL.revokeObjectURL(url);
+});
 
 // ============ Recipe Functionality ============
 function renderRecipes() {
@@ -288,3 +379,4 @@ window.deleteRecipe = deleteRecipe;
 
 // ============ Initialize ============
 renderRecipes();
+initSettings();
